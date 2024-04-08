@@ -1,59 +1,93 @@
 // Set the base URL for the API
-const baseUrl = 'http://localhost:3000';
+const baseUrl = "http://localhost:3000";
 
-// Fetch all movies when the page loads
-fetch(`${baseUrl}/films`)
- .then(response => response.json())
- .then(films => {
-    // Display a menu of all movie titles
-    const filmsList = document.getElementById('films');
-    films.forEach(film => {
-      const filmItem = document.createElement('li');
-      filmItem.classList.add('film', 'item');
-      filmItem.innerHTML = `
-        <h3 id="title">${film.title}</h3>
-      `;
-      filmsList.appendChild(filmItem);
+// Wait for the DOM to be fully loaded before running any code
+document.addEventListener("DOMContentLoaded", async () => {
 
-      // Add an event listener to the movie title
-      filmItem.querySelector('h3').addEventListener('click', () => {
-        // Fetch the movie details and display them
-        fetch(`${baseUrl}/films/${film.id}`)
-         .then(response => response.json())
-         .then(filmDetails => {
-              const filmPoster = document.getElementById('poster');
-              filmPoster.src = filmDetails.poster;
-              filmPoster.alt = `${filmDetails.title} poster`;
+    // Fetch movie details
+    async function fetchFilmDetails() {
+        try {
+            const response = await fetch(baseUrl + "/films/1");
+            const movie = await response.json();
+            // Update the DOM with the movie details
+            document.getElementById("title").innerHTML = movie.title;
+            document.getElementById("runtime").innerHTML = movie.runtime + " minutes";
+            document.getElementById("showtime").innerHTML = movie.showtime;
+            document.getElementById("film-info").innerHTML = movie.description;
+            document.getElementById("poster").src = movie.poster;
+            document.getElementById("poster").alt = movie.title;
+            document.getElementById("ticket-num").innerHTML = movie.capacity - movie.tickets_sold;
+        } catch (error) {
+            console.error('Error fetching film details:', error);
+        }
+    }
 
-              const filmDetailsElement = document.getElementById('film-details');
-              filmDetailsElement.innerHTML = `
-                <h3>${filmDetails.title}</h3>
-              `;
+    // Call the fetchFilmDetails function to load the movie details when the page loads
+    await fetchFilmDetails();
 
-              // Display the parameters of the clicked title reference in db.json
-              const filmInfoElement = document.getElementById('film-info');
-              filmInfoElement.innerHTML = `
-                <p>id: ${filmDetails.id}</p>
-              `;
-            })
-         .catch(error => {
-              console.error('Error fetching film details:', error);
+    // Create movie menu list
+    async function fetchAllMovies() {
+        try {
+            const movieMenu = document.getElementById('films');
+            movieMenu.innerHTML = '';
+            const response = await fetch(baseUrl + "/films");
+            const films = await response.json();
+            films.forEach(movie => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('film', 'item');
+                listItem.innerHTML = movie.title;
+                movieMenu.appendChild(listItem);
             });
-      });
+        } catch (error) {
+            console.error("Error fetching movie list:", error);
+        }
+    }
+
+    // Call the fetchAllMovies function to load the movie list when the page loads
+    await fetchAllMovies();
+
+    // Make the film Menu Clickable
+    const filmMenu = document.getElementById('films');
+    filmMenu.addEventListener('click', async (event) => {
+        try {
+            const selectedMovie = event.target.textContent;
+            const response = await fetch(baseUrl + "/films");
+            const films = await response.json();
+            films.forEach(movie => {
+                if (movie.title === selectedMovie) {
+                    // Update the DOM with the selected movie details
+                    document.getElementById("title").innerHTML = movie.title;
+                    document.getElementById("runtime").innerHTML = movie.runtime + " minutes";
+                    document.getElementById("showtime").innerHTML = movie.showtime;
+                    document.getElementById("film-info").innerHTML = movie.description;
+                    document.getElementById("poster").src = movie.poster;
+                    document.getElementById("poster").alt = movie.title;
+                    document.getElementById("ticket-num").innerHTML = movie.capacity - movie.tickets_sold;
+                }
+            });
+        } catch (error) {
+            console.error("Error fetching movie details:", error);
+        }
     });
 
-    // Display the first movie's details when the page loads
-    const firstFilm = films[0];
-    const filmPoster = document.getElementById('poster');
-    filmPoster.src = firstFilm.poster;
-    filmPoster.alt = `${firstFilm.title} poster`;
-
-    const filmDetails = document.getElementById('film-details');
-    filmDetails.innerHTML = `
-      <h3>${firstFilm.title}</h3>
-    `;
-  })
- .catch(error => {
-    console.error('Error fetching films:', error);
-  });
-  
+    // Buy Ticket
+    const buyTicketButton = document.getElementById('buy-ticket');
+    buyTicketButton.addEventListener('click', async () => {
+        try {
+            const response = await fetch(baseUrl + `/films/1/tickets`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickets_sold: movie.tickets_sold + 1
+                })
+            });
+            const data = await response.json();
+            // Update the DOM with the new number of tickets available
+            document.getElementById("ticket-num").innerHTML = data.capacity - data.tickets_sold;
+        } catch (error) {
+            console.error('Error buying ticket:', error);
+        }
+    });
+});
