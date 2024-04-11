@@ -18,17 +18,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     
     // Function to display movie Details
-    const displayMovieDetails = async (movie) => {
-        // Movie Poster
+    const MovieDetails = async (movie) => {
         moviePoster.src = movie.poster;
         moviePoster.alt = movie.title;
-        // Movie Title
         movieTitle.innerHTML = movie.title;
-        // Movie Runtime
         movieRuntime.innerHTML = `${movie.runtime} minutes`;
-        // Movie Showtime
         movieShowtime.innerHTML = movie.showtime;
-        // Movie Description
         movieDescription.innerHTML = movie.description;
         // Available Tickets
         ticketNum.innerHTML = movie.capacity - movie.tickets_sold;
@@ -37,7 +32,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (movie.tickets_sold >= movie.capacity) {
             buyTicketButton.textContent = 'Sold Out';
             buyTicketButton.setAttribute('disabled', 'true');
-        } else {
+        } 
+        // Enabling the Buy Ticket Button
+        else {
             buyTicketButton.textContent = 'Buy Ticket';
             buyTicketButton.removeAttribute('disabled');
         }
@@ -48,6 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Function to handle the Buy Ticket button click
     const buyTicket = async () => {
+        // Preventing the default form submission
         event.preventDefault();
         if (currentMovie) {
             // Checking if there are any available tickets
@@ -55,7 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // Update the sold tickets count
                 currentMovie.tickets_sold++;
                 await updateTicketInfo(currentMovie);
-                displayMovieDetails(currentMovie);
+                MovieDetails(currentMovie);
             }
         }
     }
@@ -64,7 +62,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const updateTicketInfo = async (movie) => {
         if (movie) {
             try {
-                // Sending a PUT request
+                // Sending a PUT request to the server
                 const response = await fetch(`${baseUrl}/films/${movie.id}`, {
                     method: 'PUT',
                     headers: {
@@ -72,7 +70,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     },
                     body: JSON.stringify(movie),
                 })
-
+                //  Checking if the request was successful
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -80,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 // Update the currentMovie with the updated data
                 currentMovie = updatedMovie;
-                displayMovieDetails(updatedMovie);
+                MovieDetails(updatedMovie);
 
             } catch (error) {
                 console.error('Update erroe:', error);
@@ -96,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const response = await fetch(`${baseUrl}/films/${currentMovie.id}`, {
                     method: 'DELETE',
                 })
-
+                // Checking if the request was successful
                 if (!response.ok) {
                     throw new Error('Network response was not OK');
                 }
@@ -111,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // Clear the currentMovie
                 currentMovie = null;
 
-                // Clear Movie Details
+                // Clear Movie Details elements
                 movieTitle.innerHTML = ''
                 moviePoster.innerHTML = '';
                 movieDescription.innerHTML = '';
@@ -129,7 +127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 // Display details of the first movie in the updated list
                 if (moviesData.length > 0) {
                     currentMovie = moviesData[0];
-                    displayMovieDetails(currentMovie);
+                    MovieDetails(currentMovie);
                 }
             } catch (error) {
                 console.error('Delete Error', error);
@@ -150,7 +148,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Adding an event listener to the li element
             li.addEventListener('click', () => {
                 currentMovie = movie;
-                displayMovieDetails(movie);
+                MovieDetails(movie);
             });
 
             //Append the li element to the movieList
@@ -167,7 +165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Display details of the first movie in the list
             if (moviesData.length > 0) {
                 currentMovie = moviesData[0];
-                displayMovieDetails(currentMovie);
+                MovieDetails(currentMovie);
             }
 
             updateMovieList();
